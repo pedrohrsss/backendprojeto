@@ -3,6 +3,7 @@
         "target": "es2018",
         "lib": ["ES5","ES6","ES2018"],
         "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
         "module": "CommonJS",
         "moduleResolution": "Node",
         "resolveJsonModule": true,
