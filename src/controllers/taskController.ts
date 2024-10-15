@@ -3,7 +3,7 @@ import { TaskService } from "../services/taskService";
 
 const service = new TaskService()
 
-export class taskController {
+export class TaskController {
     async createTask(req : Request, res: Response){
         const {description, date_task } = req.body
         const result = await service.createTask({description, date_task})
