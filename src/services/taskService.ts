@@ -1,7 +1,5 @@
-import { error } from "console";
 import { DevDataSource } from "../connections/dbDev";
 import { Task } from "../models/task";
-import { promises } from "dns";
 
 // 1) Estabelece conexão com a tabela alvo no banco de dados através de um cursor. Um cursor é um objeto que permite fazer consultas ao banco de dados via aplicação. Essas consultas são feitas na tabela do Repository que está na conexão do DataSource.
 
@@ -19,15 +17,14 @@ type findTaskRequest = {
 }
 
 type updateTaskRequest = {
-    id : string
-    description : string
-    date_task : Date
+    id: string,
+    description: string,
+    date_task: Date
 }
 
 export class TaskService {
     async createTask({ description, date_task } : newTaskRequest) : Promise<Task | Error> {
-        
-        try{
+        try {
             // INSERT INTO tasks VALUES(description, date_task)
             const task = cursor.create({
                 description, date_task
@@ -35,71 +32,84 @@ export class TaskService {
             // A função cursor.save() executa a instrução INSERT na tabela
             await cursor.save(task)
             return task
-        
-        } catch(err){
-            return new Error("Unexpected error reading task")
+        }
+        catch(err){
+            return new Error("Unexpected error saving task!")
         }
     }
-
+    
     async readOneTask({ id } : findTaskRequest) : Promise<Task | Error> {
-
         try {
-        // SELECT * FROM tasks WHERE id = id LIMIT 1
-        const task = await cursor.findOne({ where: {id}})
-        if(!task) {
-            return new Error("Task not found!")
+            // SELECT * FROM tasks WHERE id = id LIMIT 1
+            const task = await cursor.findOne({ where: {id}})
+            if(!task) {
+                return new Error("Task not found!")
+            }
+            return task
         }
-        return task
-        } catch(err){
-            return new Error("Unexpected error reading task")
+        catch(err) {
+            return new Error("Unexpected error reading task!")
         }
-
+        
     }
     
     async readAllTask(): Promise<Task[] | Error> {
-
         try {
             // SELECT * FROM tasks
             const tasks = await cursor.find()
             return tasks
-        }catch (err){
-            return new Error("Unexpected error reading task")
+        } 
+        catch(err){
+            return new Error("Unexpected error reading tasks!")
         }
+    }
+    
+    async updateTask({ id, description, date_task } : updateTaskRequest): Promise<Task | Error> {
+        try {
+            // SELECT * FROM tasks WHERE id = id LIMIT 1
+            const task = await cursor.findOne({ where: {id}})
+            if(!task) {
+                return new Error("Task not found!")
+            }
+            // Se houver uma nova descrição e/ou data informados pelo usuário vindos da requisição, a tarefa será atualizada com os novos dados; senão, os dados antigos serão mantidos.
+            task.description = description ? description : task.description
+            task.date_task = date_task ? date_task : task.date_task
+            // UPDATE tasks WHERE id = id SET description = description, date_task = date_task
+            await cursor.save(task)
+            return task
+        } 
+        catch(err){
+            return new Error("Unexpected error updating task!")
+        }
+
+        // let x = 10
+
+        // // SE..ENTÃO..SENÃO
+        // if (x % 2 == 0) {
+        //     console.log("par")
+        // }
+        // else {
+        //     console.log("ímpar")
+        // }
+
+        // // OPERADOR TERNÁRIO
+        // (x % 2 == 0) ? console.log("par") : console.log("ímpar")
+
         
     }
     
-    async updateTask({id, description, date_task} : updateTaskRequest) : Promise<Task | Error> {
+    async deleteTask({ id }:findTaskRequest): Promise<String | Error> { 
         try{
             // SELECT * FROM tasks WHERE id = id LIMIT 1
-            const task = await cursor.findOne({where : {id}})
-                if(!task){
-                    return new Error("task not found!")
-                }
-
-                task.description = description ? description : task.description
-                task.date_task = date_task ? date_task : task.date_task
-
-                await cursor.save(task)
-                return task
-        }catch(err){
-            return new Error("Unexpected error reading task")
+            const task = await cursor.findOne({ where: {id}})
+            if(!task) {
+                return new Error("Task not found!")
+            }
+            await cursor.delete(task.id)
+            return "Task removed successfully!"
         }
-
-    }
-    
-    async deleteTask({id} : findTaskRequest): Promise<string| Error> { 
-        
-        try{
-            // SELECT * FROM tasks WHERE id = id LIMIT 1
-            const task = await cursor.findOne({where : {id}})
-                if(!task){
-                    return new Error("task not found!")
-                }
-                await cursor.delete(task.id)
-                return "Deletado com sucesso"
-        }catch(err){
-            return new Error("Unexpected error reading task")
+        catch(err){
+            return new Error("Unexpected error deleting task!")
         }
-
     }
 }
